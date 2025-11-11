@@ -1,15 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, url_for
 from itsdangerous import URLSafeSerializer
-import hashlib
+import hashlib, os
 
 app = Flask(__name__)
-SECRET = "dev-secret"  # overridden by env in Docker/compose
-import os
-SECRET = os.getenv("SECRET_KEY", SECRET)
+SECRET = os.getenv("SECRET_KEY", "dev-secret")
 signer = URLSafeSerializer(SECRET, salt="user-auth")
 
-# naive in-memory stores (demo only)
-USERS = {}   # username -> dict
+USERS = {}
 NEXT_ID = 1
 
 def hash_pw(pw: str) -> str:
@@ -33,15 +30,15 @@ def healthz():
 def register():
     global NEXT_ID
     payload = request.get_json(force=True, silent=True) or {}
-    username = payload.get("username","").strip()
-    password = payload.get("password","")
-    name = payload.get("name","").strip()
-    email = payload.get("email","").strip()
+    username = payload.get("username", "").strip()
+    password = payload.get("password", "")
+    name = payload.get("name", "").strip()
+    email = payload.get("email", "").strip()
 
     if not username or not password:
-        return jsonify({"error":"username and password required"}), 400
+        return jsonify({"error": "username and password required"}), 400
     if username in USERS:
-        return jsonify({"error":"username already exists"}), 409
+        return jsonify({"error": "username already exists"}), 409
 
     user = {
         "id": str(NEXT_ID),
@@ -52,58 +49,54 @@ def register():
     }
     USERS[username] = user
     NEXT_ID += 1
-    public = {k:v for k,v in user.items() if k != "password_hash"}
+    public = {k: v for k, v in user.items() if k != "password_hash"}
     return jsonify(public), 201
 
 @app.post("/login")
 def login():
     payload = request.get_json(force=True, silent=True) or {}
-    username = payload.get("username","").strip()
-    password = payload.get("password","")
+    username = payload.get("username", "").strip()
+    password = payload.get("password", "")
     user = USERS.get(username)
     if not user or user["password_hash"] != hash_pw(password):
-        return jsonify({"error":"invalid credentials"}), 401
+        return jsonify({"error": "invalid credentials"}), 401
     token = make_token(username)
     return jsonify({"token": token})
 
 @app.get("/profile")
 def profile():
-    auth = request.headers.get("authorization","")
+    auth = request.headers.get("authorization", "")
     if not auth.lower().startswith("bearer "):
-        return jsonify({"error":"missing bearer token"}), 401
-    token = auth.split(" ",1)[1].strip()
+        return jsonify({"error": "missing bearer token"}), 401
+    token = auth.split(" ", 1)[1].strip()
     username = parse_token(token)
     if not username or username not in USERS:
-        return jsonify({"error":"invalid token"}), 401
+        return jsonify({"error": "invalid token"}), 401
     user = USERS[username]
-    public = {k:v for k,v in user.items() if k != "password_hash"}
+    public = {k: v for k, v in user.items() if k != "password_hash"}
     return jsonify(public)
-
 
 @app.get("/baruchi-login")
 def baruchi_login():
-    # If "baruchi" user doesn’t exist, create it automatically
+    """Shortcut route that auto-creates 'baruchi' and redirects to profile."""
     global NEXT_ID
+
+    # create user if not exists
     if "baruchi" not in USERS:
         USERS["baruchi"] = {
             "id": str(NEXT_ID),
             "username": "baruchi",
             "name": "Baruchi Halamish",
             "email": "baruchi@example.com",
-            "password_hash": hash_pw("baruchi")  # any placeholder password
+            "password_hash": hash_pw("devopsai")
         }
         NEXT_ID += 1
 
-    # Generate a signed token for baruchi
+    # generate token and redirect to profile
     token = make_token("baruchi")
-    return jsonify({
-        "message": "Logged in as Baruchi",
-        "username": "baruchi",
-        "token": token
-    })
-
+    profile_url = url_for("profile", _external=True)
+    # attach token as query param for browser-friendly redirection
+    return redirect(f"{profile_url}?token={token}")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
