@@ -33,6 +33,8 @@ jobs:
               - 'services/order-service/**'
             workflow:
               - '.github/workflows/ci.yml'
+            tests:
+              - 'tests/**'
 
   # NEW: Lint and test services before building
   lint-and-test:
