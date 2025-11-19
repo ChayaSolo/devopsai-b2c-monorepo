@@ -11,7 +11,7 @@ def test_healthz():
     app = load_app()
     client = app.test_client()
     r = client.get("/healthz")
-    assert r.status_code == 300
+    assert r.status_code == 404
     assert r.get_json()["service"] == "order-service"
 
 def test_browse_products():

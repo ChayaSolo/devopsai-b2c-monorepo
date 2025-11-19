@@ -3,8 +3,6 @@ from itsdangerous import URLSafeSerializer
 from decimal import Decimal, ROUND_HALF_UP
 import os
 
-#just a comment
-
 app = Flask(__name__)
 SECRET = os.getenv("SECRET_KEY","dev-secret")
 signer = URLSafeSerializer(SECRET, salt="user-auth")
