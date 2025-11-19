@@ -81,24 +81,24 @@ def profile():
     public = {k: v for k, v in user.items() if k != "password_hash"}
     return jsonify(public)
 
-@app.get("/baruchi-login")
-def baruchi_login():
-    """Shortcut route that auto-creates 'baruchi' and redirects to profile."""
+@app.get("/Chaya-login")
+def Chaya_login():
+    """Shortcut route that auto-creates 'Chaya' and redirects to profile."""
     global NEXT_ID
 
     # create user if not exists
-    if "baruchi" not in USERS:
-        USERS["baruchi"] = {
+    if "Chaya" not in USERS:
+        USERS["Chaya"] = {
             "id": str(NEXT_ID),
-            "username": "baruchi",
-            "name": "Baruchi Halamish",
-            "email": "baruchi@example.com",
+            "username": "Chaya",
+            "name": "Chaya Halamish",
+            "email": "Chaya@example.com",
             "password_hash": hash_pw("devopsai")
         }
         NEXT_ID += 1
 
     # generate token and redirect to profile
-    token = make_token("baruchi")
+    token = make_token("Chaya")
     profile_url = url_for("profile", _external=True)
     # attach token as query param for browser-friendly redirection
     return redirect(f"{profile_url}?token={token}")
