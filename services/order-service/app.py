@@ -8,6 +8,7 @@ SECRET = os.getenv("SECRET_KEY","dev-secret")
 signer = URLSafeSerializer(SECRET, salt="user-auth")
 ENVIRONMENT = os.getenv("APP_ENV", "unknown")  # set via Helm values per env
 
+#just a comment
 
 # toy catalog and orders (demo)
 PRODUCTS = {
