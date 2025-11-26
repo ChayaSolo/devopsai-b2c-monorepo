@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/baruchihalamish20/user-service
-  tag: "287b0f7"
+  tag: "f63dba1"
 env:
   - name: SECRET_KEY
     value: "dev-secret-user"
